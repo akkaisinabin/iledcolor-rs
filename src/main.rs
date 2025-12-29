@@ -42,6 +42,8 @@ impl ColorArg {
 )]
 pub struct Cli {
     #[arg(short, long)]
+    pub device_name: String,
+    #[arg(short, long)]
     pub image_path: Option<String>,
     #[arg(short, long)]
     color: Option<ColorArg>,
@@ -51,12 +53,12 @@ pub struct Cli {
 async fn main() -> Result<(), std::io::Error> {
     env_logger::init();
     let cli = Cli::parse();
-    let device = ble::find(ble::BLUETOOTH_NAME).await.expect("Scanning failed").expect("no device found");
+    let device = ble::find(&cli.device_name).await.expect("Scanning failed").expect("no device found");
     
     let image: Image = match cli {
-        Cli { image_path: Some(path), color: _ } => 
+        Cli {device_name: _ , image_path: Some(path), color: _ } => 
             Image::from_file(std::fs::File::open(path)?).expect("Failed to load image"),
-        Cli { image_path: None, color: Some(color) } => {
+        Cli {device_name: _, image_path: None, color: Some(color) } => {
             let (r, g, b) = color.to_rgb();
             Image::solid_color(48, 12, r, g, b)
         },
