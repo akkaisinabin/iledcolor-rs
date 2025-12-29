@@ -1,10 +1,10 @@
+use crate::image::ILedImage;
 use clap::{ArgGroup, Parser, command};
+use std::error::Error;
 
-use crate::image::Image;
-
-mod packet;
-mod image;
 mod ble;
+mod image;
+mod packet;
 mod send;
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -50,21 +50,36 @@ pub struct Cli {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), std::io::Error> {
+async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
     let cli = Cli::parse();
-    let device = ble::find(&cli.device_name).await.expect("Scanning failed").expect("no device found");
-    
-    let image: Image = match cli {
-        Cli {device_name: _ , image_path: Some(path), color: _ } => 
-            Image::from_file(std::fs::File::open(path)?).expect("Failed to load image"),
-        Cli {device_name: _, image_path: None, color: Some(color) } => {
+
+    let image: ILedImage = match cli {
+        Cli {
+            device_name: _,
+            image_path: Some(path),
+            color: _,
+        } => ILedImage::from_file(std::fs::File::open(path)?).map_err(|e| e.to_string())?,
+        Cli {
+            device_name: _,
+            image_path: None,
+            color: Some(color),
+        } => {
             let (r, g, b) = color.to_rgb();
-            Image::solid_color(48, 12, r, g, b)
-        },
+            ILedImage::solid_color(48, 12, r, g, b)
+        }
         _ => panic!("No input provided"),
     };
 
-    send::image(device, image).await
-}
+    println!("Looking for device: {}", cli.device_name);
+    let device = ble::find(&cli.device_name)
+        .await
+        .expect("Scanning failed")
+        .expect("No device found");
 
+    println!("Sending image to device: {}", cli.device_name);
+    send::image(device, image)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}

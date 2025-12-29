@@ -16,7 +16,6 @@ pub const _UNKNOWN_SERVICE_UUID: Uuid = Uuid::from_u128(0x0000ae00_0000_1000_800
 pub const _UNKNOWN_CHARIC1_UUID: Uuid = Uuid::from_u128(0x0000ae01_0000_1000_8000_00805f9b34fb);
 pub const _UNKNOWN_NOTIFY_UUID: Uuid = Uuid::from_u128(0x0000ae02_0000_1000_8000_00805f9b34fb);
 
-
 pub async fn find(name: &str) -> Result<Option<Device>, bluest::Error> {
     let adapter = Adapter::default()
         .await
@@ -27,10 +26,11 @@ pub async fn find(name: &str) -> Result<Option<Device>, bluest::Error> {
     let connected_devices = adapter.connected_devices().await?;
     for device in connected_devices {
         if let Ok(dev_name) = device.name()
-            && dev_name == name {
-                info!("Found connected BLE device: {} {}", dev_name, device.id());
-                return Ok(Some(device));
-            }
+            && dev_name == name
+        {
+            info!("Found connected BLE device: {} {}", dev_name, device.id());
+            return Ok(Some(device));
+        }
     }
 
     info!("Could not find connected device, starting scan...");
@@ -39,7 +39,12 @@ pub async fn find(name: &str) -> Result<Option<Device>, bluest::Error> {
         match discovered_device.device.name() {
             Ok(dev_name) if dev_name == name => {
                 info!("Found {}", dev_name);
-                debug!("Found BLE device: {} {} {:?}", dev_name, discovered_device.device.id(), discovered_device.adv_data.services);
+                debug!(
+                    "Found BLE device: {} {} {:?}",
+                    dev_name,
+                    discovered_device.device.id(),
+                    discovered_device.adv_data.services
+                );
                 adapter.connect_device(&discovered_device.device).await?;
                 return Ok(Some(discovered_device.device));
             }
