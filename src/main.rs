@@ -1,6 +1,6 @@
 use crate::image::ILedImage;
 use clap::{ArgGroup, Parser, command};
-use std::error::Error;
+use std::{error::Error, fs::File, path::PathBuf};
 
 mod ble;
 mod image;
@@ -44,7 +44,7 @@ pub struct Cli {
     #[arg(short, long)]
     pub device_name: String,
     #[arg(short, long)]
-    pub image_path: Option<String>,
+    pub image_path: Option<PathBuf>,
     #[arg(short, long)]
     color: Option<ColorArg>,
 }
@@ -59,7 +59,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
             device_name: _,
             image_path: Some(path),
             color: _,
-        } => ILedImage::from_file(std::fs::File::open(path)?).map_err(|e| e.to_string())?,
+        } => {
+            let file = File::open(path).map_err(|e| e.to_string())?;
+            ILedImage::from_file(file).map_err(|e| e.to_string())?
+        }
         Cli {
             device_name: _,
             image_path: None,
