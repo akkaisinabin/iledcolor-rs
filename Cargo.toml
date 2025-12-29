@@ -1,0 +1,10 @@
+[package]
+name = "iledcolor-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bluest = { version = "0.6.9", features = ["serde", "l2cap", "unstable"] }
+crc = "3.4.0"
+tokio = "1.48.0"
+tokio-stream = "0.1.17"
