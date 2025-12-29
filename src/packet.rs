@@ -26,12 +26,12 @@ impl Packet {
             + if data_length.is_some() { 2 } else { 0 }
             + 2; // checksum
         let mut packet = Packet {
-            opcode: opcode,
-            handle: handle,
-            length: length,
-            sequence: sequence,
-            data_length: data_length,
-            data: data,
+            opcode,
+            handle,
+            length,
+            sequence,
+            data_length,
+            data,
             checksum: 0,
         };
         packet.checksum = packet.calculate_checksum();
@@ -97,8 +97,8 @@ impl std::fmt::Display for Packet {
 
 pub struct ImageData {
     pub crc32: u32,
-    Unknown1: u8, // 01
-    Padding: [u8; 19],
+    unknown1: u8, // 01
+    padding: [u8; 19],
     pub data: Vec<u8>,
 }
 
@@ -109,8 +109,8 @@ impl ImageData {
         let crc32 = CRC32_ISCSI.checksum(&data);
         ImageData {
             crc32,
-            Unknown1: 0x01,
-            Padding: [0; 19],
+            unknown1: 0x01,
+            padding: [0; 19],
             data,
         }
     }
@@ -118,8 +118,8 @@ impl ImageData {
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::new();
         bytes.extend(&self.crc32.to_be_bytes());
-        bytes.push(self.Unknown1);
-        bytes.extend(&self.Padding);
+        bytes.push(self.unknown1);
+        bytes.extend(&self.padding);
         bytes.extend(&self.data);
         bytes
     }
