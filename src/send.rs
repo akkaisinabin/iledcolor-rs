@@ -49,9 +49,14 @@ pub async fn image(device: Device, image: ILedImage) -> Result<(), std::io::Erro
     let mut response: Result<Vec<u8>, bluest::Error>;
 
     // 54 0d 0003 00 0064
-    let connect_packet = packet::Packet::new(0x54, packet::Handle::Connect, None, None, vec![0x00]);
+    let connect_packet = packet::Packet::new(
+        0x54, 
+        packet::Handle::Connect, 
+        None, 
+        None, 
+        vec![0x00]);
     cmd_char
-        .write(&connect_packet.to_bytes())
+        .write_without_response(&connect_packet.to_bytes())
         .await
         .expect("Failed to write to characteristic 1");
     print_bytes_hex("Connect Packet 1", &connect_packet.to_bytes());
@@ -68,7 +73,7 @@ pub async fn image(device: Device, image: ILedImage) -> Result<(), std::io::Erro
         vec![0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
     );
     cmd_char
-        .write(&connect_packet2.to_bytes())
+        .write_without_response(&connect_packet2.to_bytes())
         .await
         .expect("Failed to write to characteristic 1");
     print_bytes_hex("Connect Packet 2", &connect_packet2.to_bytes());
@@ -95,7 +100,7 @@ pub async fn image(device: Device, image: ILedImage) -> Result<(), std::io::Erro
         packet::Packet::new(0x54, packet::Handle::StartStream, None, None, begin_data);
     print_bytes_hex("Begin Packet", &begin_packet.to_bytes());
     cmd_char
-        .write(&begin_packet.to_bytes())
+        .write_without_response(&begin_packet.to_bytes())
         .await
         .expect("Failed to write to characteristic 1");
     response = updates.next().await.expect("No response");
@@ -112,7 +117,7 @@ pub async fn image(device: Device, image: ILedImage) -> Result<(), std::io::Erro
         );
         print_bytes_hex("Image Data Packet Chunk:", &packet.to_bytes());
         write_char
-            .write(&packet.to_bytes())
+            .write_without_response(&packet.to_bytes())
             .await
             .expect("Failed to write to characteristic 1");
         response = updates.next().await.expect("No response");
@@ -123,7 +128,7 @@ pub async fn image(device: Device, image: ILedImage) -> Result<(), std::io::Erro
     let end_packet = packet::Packet::new(0x54, packet::Handle::EndStream, None, None, vec![0x01]);
     print_bytes_hex("End Packet", &end_packet.to_bytes());
     write_char
-        .write(&end_packet.to_bytes())
+        .write_without_response(&end_packet.to_bytes())
         .await
         .expect("Failed to write to characteristic 1");
     response = updates.next().await.expect("No response");

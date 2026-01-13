@@ -2,7 +2,7 @@ use bluest::{Adapter, Device, Uuid};
 use log::{debug, error, info};
 use tokio_stream::StreamExt;
 
-pub const _BLUETOOTH_MAC: [u8; 6] = [0x9E, 0x19, 0x3D, 0x7C, 0x21, 0xBE];
+// pub const _BLUETOOTH_MAC: [u8; 6] = [0x9E, 0x19, 0x3D, 0x7C, 0x21, 0xBE];        leftovers..
 
 pub const _GENERIC_SERVICE_UUID: Uuid = Uuid::from_u128(0x00001800_0000_1000_8000_00805f9b34fb);
 pub const _DEVICE_NAME_UUID: Uuid = Uuid::from_u128(0x00002a00_0000_1000_8000_00805f9b34fb);

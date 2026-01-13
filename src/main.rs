@@ -1,5 +1,5 @@
 use crate::image::ILedImage;
-use clap::{ArgGroup, Parser, command};
+use clap::{ArgGroup, Parser};
 use std::{error::Error, fs::File, path::PathBuf};
 
 mod ble;
