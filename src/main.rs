@@ -33,7 +33,7 @@ impl ColorArg {
         }
     }
 }
-
+// -s newpass [old pass] | [-b brightness] [-e enable] [-p password] [-i image | -c color] 
 #[derive(Parser, Debug)]
 #[command(
     version,
@@ -49,7 +49,7 @@ pub struct Cli {
     color: Option<ColorArg>,
 }
 
-#[tokio::main]
+#[tokio::main]      // TODO rewrite main function as message queue with arg handling; stdin; sockets?
 async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
     let cli = Cli::parse();

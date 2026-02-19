@@ -1,20 +1,73 @@
-use bluest::{Adapter, Device, Uuid};
+use bluest::{Adapter, BluetoothUuidExt, Device, DeviceId, Uuid, btuuid,Characteristic};
 use log::{debug, error, info};
 use tokio_stream::StreamExt;
 
 // pub const _BLUETOOTH_MAC: [u8; 6] = [0x9E, 0x19, 0x3D, 0x7C, 0x21, 0xBE];        leftovers..
 
-pub const _GENERIC_SERVICE_UUID: Uuid = Uuid::from_u128(0x00001800_0000_1000_8000_00805f9b34fb);
-pub const _DEVICE_NAME_UUID: Uuid = Uuid::from_u128(0x00002a00_0000_1000_8000_00805f9b34fb);
+pub const _GENERIC_SERVICE_UUID:    Uuid = Uuid::from_u128(0x00001800_0000_1000_8000_00805f9b34fb);
+pub const _DEVICE_NAME_UUID:        Uuid = Uuid::from_u128(0x00002a00_0000_1000_8000_00805f9b34fb);
 
-pub const WRITE_SERVICE_UUID: Uuid = Uuid::from_u128(0x0000a950_0000_1000_8000_00805f9b34fb);
-pub const CMD_CHARIC_UUID: Uuid = Uuid::from_u128(0x0000a951_0000_1000_8000_00805f9b34fb);
-pub const WRITE_CHARIC_UUID: Uuid = Uuid::from_u128(0x0000a952_0000_1000_8000_00805f9b34fb);
-pub const NOTIFY_CHARIC_UUID: Uuid = Uuid::from_u128(0x0000a953_0000_1000_8000_00805f9b34fb);
+pub const WRITE_SERVICE_UUID:       Uuid = Uuid::from_u128(0x0000a950_0000_1000_8000_00805f9b34fb);
+pub const CMD_CHARIC_UUID:          Uuid = Uuid::from_u128(0x0000a951_0000_1000_8000_00805f9b34fb);
+pub const WRITE_CHARIC_UUID:        Uuid = Uuid::from_u128(0x0000a952_0000_1000_8000_00805f9b34fb);
+pub const NOTIFY_CHARIC_UUID:       Uuid = Uuid::from_u128(0x0000a953_0000_1000_8000_00805f9b34fb);
 
-pub const _UNKNOWN_SERVICE_UUID: Uuid = Uuid::from_u128(0x0000ae00_0000_1000_8000_00805f9b34fb);
-pub const _UNKNOWN_CHARIC1_UUID: Uuid = Uuid::from_u128(0x0000ae01_0000_1000_8000_00805f9b34fb);
-pub const _UNKNOWN_NOTIFY_UUID: Uuid = Uuid::from_u128(0x0000ae02_0000_1000_8000_00805f9b34fb);
+pub const _UNKNOWN_SERVICE_UUID:    Uuid = Uuid::from_u128(0x0000ae00_0000_1000_8000_00805f9b34fb);
+pub const _UNKNOWN_CHARIC1_UUID:    Uuid = Uuid::from_u128(0x0000ae01_0000_1000_8000_00805f9b34fb);
+pub const _UNKNOWN_NOTIFY_UUID:     Uuid = Uuid::from_u128(0x0000ae02_0000_1000_8000_00805f9b34fb);
+
+
+#[derive(Debug, Clone)]
+pub struct ILEDDev {
+    pub cmd_char: Characteristic,
+    pub write_char: Characteristic,
+    pub notify_char: Characteristic,
+    pub name_char: Characteristic,
+}
+
+impl ILEDDev {
+    pub async fn new(device: Device) ->  Self {
+        let services = device
+            .services()
+            .await
+            .expect("Service discovery failed");
+        let write_service = services
+            .iter()
+            .find(|s|s.uuid() == WRITE_SERVICE_UUID)
+            .expect("No matching service found");
+        let chars = write_service
+            .characteristics()
+            .await
+            .expect("Characteristic discovery failed");
+        let gen_service = services
+            .iter()
+            .find(|s|s.uuid() == _GENERIC_SERVICE_UUID)
+            .expect("Generic service not found");
+        let gen_chars = gen_service
+            .characteristics()
+            .await
+            .expect("generic characteristics not found");
+        ILEDDev {
+            cmd_char: chars
+                .iter()
+                .find(|c| c.uuid() == CMD_CHARIC_UUID)
+                .expect("Characteristic 0 not found").clone(),
+            write_char: chars
+                .iter()
+                .find(|c| c.uuid() == WRITE_CHARIC_UUID)
+                .expect("Characteristic 1 not found").clone(),
+            notify_char: chars
+                .iter()
+                .find(|c| c.uuid() == NOTIFY_CHARIC_UUID)
+                .expect("Notify Characteristic not found").clone(),
+            name_char: gen_chars
+                .iter()
+                .find(|c|c.uuid() == _DEVICE_NAME_UUID)
+                .expect("name characteristic not found").clone(),
+        }
+        
+    }
+}
 
 pub async fn find(name: &str) -> Result<Option<Device>, bluest::Error> {
     let adapter = Adapter::default()
